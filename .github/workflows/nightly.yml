@@ -1,0 +1,29 @@
+# name: Nightly
+# on:
+#   schedule:
+#     - cron: 0 8 * * 1-5
+#   workflow_dispatch: {}
+
+# jobs:
+#   trunk_check:
+#     name: Trunk Check Upload
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout meshtastic firmware
+#         uses: actions/checkout@v4
+#         with:
+#           repository: meshtastic/firmware
+#           ref: master
+#           submodules: recursive
+#       - name: Checkout this repo to .custom
+#         uses: actions/checkout@v4
+#         with:
+#           path: .custom
+#       - name: Move contents of .custom to root
+#         run: rsync -av --exclude .git/ .custom/ . && rm -rf .custom
+
+#       # - name: Trunk Check
+#       #   uses: trunk-io/trunk-action@782e83f803ca6e369f035d64c6ba2768174ba61b
+#       #   with:
+#       #     trunk-token: ${{ secrets.TRUNK_TOKEN }}
