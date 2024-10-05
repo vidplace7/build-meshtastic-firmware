@@ -1,0 +1,105 @@
+name: CI
+on:
+  # # Triggers the workflow on push but only for the master branch
+  push:
+    branches: [main, testing]
+    paths-ignore:
+      - "**.md"
+      - version.properties
+
+  # Note: This is different from "pull_request". Need to specify ref when doing checkouts.
+  pull_request_target:
+    branches: [master, testing]
+    paths-ignore:
+      - "**.md"
+      #- "**.yml"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }} ${{ matrix.board }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: esp32s3
+            board: t-energy-s3_e22
+            remove-debug-flags: >-
+              ./arch/esp32/esp32.ini
+              ./arch/esp32/esp32s2.ini
+              ./arch/esp32/esp32s3.ini
+              ./arch/esp32/esp32c3.ini
+            build-script-path: bin/build-esp32.sh
+            ota-firmware-source: firmware-s3.bin
+            ota-firmware-target: release/bleota-s3.bin
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+            include-web-ui: true
+
+          - arch: nrf52840
+            board: xiao_ble
+            build-script-path: bin/build-nrf52.sh
+            artifact-paths: |
+              release/*.hex
+              release/*.uf2
+              release/*.elf
+              release/*.zip
+          
+          - arch: rp2040
+            board: rp2040-lora-slowclock
+            build-script-path: bin/build-rpi2040.sh
+            artifact-paths: |
+              release/*.uf2
+              release/*.elf
+
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout_firmware
+        name: Checkout Meshtastic firmware
+        uses: actions/checkout@v4
+        with:
+          repository: meshtastic/firmware
+          ref: master
+          submodules: recursive
+
+      - id: checkout_custom
+        uses: actions/checkout@v4
+        name: Checkout this repo (custom changes)
+        with:
+          path: .custom
+
+      - name: Overlay custom firmware changes
+        run: |
+          rsync -av .custom/firmware/ ${{ github.workspace }}
+          rm -rf .custom
+
+      - name: Cache PlatformIO and pip
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.cache
+          key: pio-${{ matrix.arch }}
+
+      - id: build
+        uses: vidplace7/build-meshtastic@main
+        env:
+          XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+          PLATFORMIO_CACHE_DIR: ${{ github.workspace }}/.cache/.platformio
+        with:
+          arch: ${{ matrix.arch }}
+          board: ${{ matrix.board }}
+          build-script-path: ${{ matrix.build-script-path }}
+          remove-debug-flags: ${{ matrix.remove-debug-flags }}
+          ota-firmware-source: ${{ matrix.ota-firmware-source }}
+          ota-firmware-target: ${{ matrix.ota-firmware-target }}
+          include-web-ui: ${{ matrix.include-web-ui }}
+
+      - name: Store binaries as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.arch }}-${{ matrix.board }}-${{ steps.build.outputs.version }}.zip
+          overwrite: true
+          path: |
+            ${{ matrix.artifact-paths }}
