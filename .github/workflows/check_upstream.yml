@@ -1,0 +1,73 @@
+name: Check upstream releases
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Nightly
+  workflow_dispatch:  # Debugging
+jobs:
+  check:
+    name: Check for meshtastic firmware changes
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Get the latest meshtastic releases
+      - id: gh_meshtastic_firmware_release
+        name: Get latest Meshtastic firmware releases
+        run: |
+          beta_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases/latest | jq)
+          echo "beta_ver=$(jq -r '.tag_name' <<< $beta_json)" >> $GITHUB_OUTPUT
+          echo "beta_name=$(jq -r '.name' <<< $beta_json)" >> $GITHUB_OUTPUT
+          echo "beta_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$(jq -r '.body' <<< $beta_json)" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          alpha_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases | jq 'map(select(.prerelease)) | first')
+          echo "alpha_ver=$(jq -r '.tag_name' <<< $alpha_json)" >> $GITHUB_OUTPUT
+          echo "alpha_name=$(jq -r '.name' <<< $alpha_json)" >> $GITHUB_OUTPUT
+          echo "alpha_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$(jq -r '.body' <<< $alpha_json)" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # Get the latest ${{ github.repository }} releases
+      - id: gh_currentrepo_release
+        name: Get latest release of this repo
+        run: |
+          beta_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases/latest | jq)
+          echo "beta_ver=$(jq -r '.tag_name' <<< $beta_json)" >> $GITHUB_OUTPUT
+          alpha_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases | jq 'map(select(.prerelease)) | first')
+          echo "alpha_ver=$(jq -r '.tag_name' <<< $alpha_json)" >> $GITHUB_OUTPUT
+        continue-on-error: true
+    outputs:
+      meshtastic_alpha_ver: ${{ steps.gh_meshtastic_firmware_release.outputs.alpha_ver }}
+      meshtastic_alpha_name: ${{ steps.gh_meshtastic_firmware_release.outputs.alpha_name }}
+      meshtastic_alpha_body: ${{ steps.gh_meshtastic_firmware_release.outputs.alpha_body }}
+
+      meshtastic_beta_ver: ${{ steps.gh_meshtastic_firmware_release.outputs.beta_ver }}
+      meshtastic_beta_name: ${{ steps.gh_meshtastic_firmware_release.outputs.beta_name }}
+      meshtastic_beta_body: ${{ steps.gh_meshtastic_firmware_release.outputs.beta_body }}
+
+      currentrepo_alpha_ver: ${{ steps.gh_currentrepo_release.outputs.alpha_ver }}
+      currentrepo_beta_ver: ${{ steps.gh_currentrepo_release.outputs.beta_ver }}
+
+  # TODO: Matrix all of this
+  build_alpha:
+    needs: check
+    if: needs.check.outputs.currentrepo_alpha_ver != needs.check.outputs.meshtastic_alpha_ver
+    name: Build (Alpha)
+    uses: ./.github/workflows/build.yml
+    with:
+      meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_alpha_ver }}
+      release_prerelease: true
+      release_name: ${{ needs.check.outputs.meshtastic_alpha_name }}
+      release_body: ${{ needs.check.outputs.meshtastic_alpha_body }}
+
+  build_beta:
+    needs: check
+    if: needs.check.outputs.currentrepo_beta_ver != needs.check.outputs.meshtastic_beta_ver
+    name: Build (Beta)
+    uses: ./.github/workflows/build.yml
+    with:
+      meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_beta_ver }}
+      release_prerelease: false
+      release_name: ${{ needs.check.outputs.meshtastic_beta_name }}
+      release_body: ${{ needs.check.outputs.meshtastic_beta_body }}
