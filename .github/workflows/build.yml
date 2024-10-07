@@ -123,7 +123,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      # Get the upstream meshtastic firmware release
+      # Get upstream meshtastic firmware release info
       - id: gh_upstream_release
         name: Get Meshtastic firmware release info for ${{ env.meshtastic_firmware_ref }}
         run: |

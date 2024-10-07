@@ -6,50 +6,33 @@ on:
 
 jobs:
   check:
-    name: Check for meshtastic firmware changes
+    name: Check Upstream
+    strategy:
+      matrix:
+        channel: [alpha, beta]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-
-      # Get the latest meshtastic releases
-      - id: gh_meshtastic_firmware_release
-        name: Get latest Meshtastic firmware releases
+      - id: fw_release
+        name: Get latest firmware release
         run: |
-          beta_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases/latest | jq)
-          echo "beta_ver=$(jq -r '.tag_name' <<< $beta_json)" >> $GITHUB_OUTPUT
-          alpha_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases | jq 'map(select(.prerelease)) | first')
-          echo "alpha_ver=$(jq -r '.tag_name' <<< $alpha_json)" >> $GITHUB_OUTPUT
-
-      # Get the latest ${{ github.repository }} releases
-      - id: gh_currentrepo_release
-        name: Get latest release of this repo
-        run: |
-          beta_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases/latest | jq)
-          echo "beta_ver=$(jq -r '.tag_name' <<< $beta_json)" >> $GITHUB_OUTPUT
-          alpha_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases | jq 'map(select(.prerelease)) | first')
-          echo "alpha_ver=$(jq -r '.tag_name' <<< $alpha_json)" >> $GITHUB_OUTPUT
+          if [ "${{ matrix.channel }}" == "alpha" ]; then
+            meshtastic_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases | jq 'map(select(.prerelease)) | first')
+            currentrepo_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases | jq 'map(select(.prerelease)) | first')
+          elif [ "${{ matrix.channel }}" == "beta" ]; then
+            meshtastic_json=$(curl -s ${{ github.api_url }}/repos/meshtastic/firmware/releases/latest | jq)
+            currentrepo_json=$(curl -s ${{ github.api_url }}/repos/${{ github.repository }}/releases/latest | jq)
+          fi
+          echo "meshtastic_ver=$(jq -r '.tag_name' <<< $meshtastic_json)" >> $GITHUB_OUTPUT
+          echo "currentrepo_ver=$(jq -r '.tag_name' <<< $currentrepo_json)" >> $GITHUB_OUTPUT
         continue-on-error: true
     outputs:
-      meshtastic_alpha_ver: ${{ steps.gh_meshtastic_firmware_release.outputs.alpha_ver }}
-      meshtastic_beta_ver: ${{ steps.gh_meshtastic_firmware_release.outputs.beta_ver }}
+      meshtastic_ver: ${{ steps.fw_release.outputs.meshtastic_ver }}
+      currentrepo_ver: ${{ steps.fw_release.outputs.currentrepo_ver }}
 
-      currentrepo_alpha_ver: ${{ steps.gh_currentrepo_release.outputs.alpha_ver }}
-      currentrepo_beta_ver: ${{ steps.gh_currentrepo_release.outputs.beta_ver }}
-
-  # TODO: Matrix all of this
-  build_alpha:
+  build:
+    # name: Build
     needs: check
-    if: needs.check.outputs.currentrepo_alpha_ver != needs.check.outputs.meshtastic_alpha_ver
-    name: Build (Alpha)
+    if: needs.check.outputs.currentrepo_ver != needs.check.outputs.meshtastic_ver
     uses: ./.github/workflows/build.yml
     with:
-      meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_alpha_ver }}
-
-  build_beta:
-    needs: check
-    if: needs.check.outputs.currentrepo_beta_ver != needs.check.outputs.meshtastic_beta_ver
-    name: Build (Beta)
-    uses: ./.github/workflows/build.yml
-    with:
-      meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_beta_ver }}
-
+      meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_ver }}
