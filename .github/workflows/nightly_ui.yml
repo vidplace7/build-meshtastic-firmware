@@ -1,0 +1,13 @@
+name: Build UI nightly
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Nightly
+  workflow_dispatch:  # Debugging
+
+jobs:
+  ui-build:
+    name: Build Experimental UI
+    uses: ./.github/workflows/build.yml
+    with:
+      meshtastic_firmware_ref: tft-gui-work
+      create_release: false

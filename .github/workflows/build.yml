@@ -68,6 +68,14 @@ jobs:
               release/*.elf
               release/*.zip
 
+          - arch: nrf52840
+            board: heltec-mesh-node-t114
+            artifact-paths: |
+              release/*.hex
+              release/*.uf2
+              release/*.elf
+              release/*.zip
+
           - arch: esp32s3
             board: t-energy-s3_e22
             artifact-paths: |
