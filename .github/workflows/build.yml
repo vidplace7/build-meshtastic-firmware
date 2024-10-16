@@ -56,22 +56,12 @@ jobs:
         include:
           - arch: esp32s3
             board: t-deck
-            remove-debug-flags: >-
-              ./arch/esp32/esp32.ini
-              ./arch/esp32/esp32s2.ini
-              ./arch/esp32/esp32s3.ini
-              ./arch/esp32/esp32c3.ini
-            build-script-path: bin/build-esp32.sh
-            ota-firmware-source: firmware-s3.bin
-            ota-firmware-target: release/bleota-s3.bin
             artifact-paths: |
               release/*.bin
               release/*.elf
-            include-web-ui: true
 
           - arch: nrf52840
             board: xiao_ble
-            build-script-path: bin/build-nrf52.sh
             artifact-paths: |
               release/*.hex
               release/*.uf2
@@ -80,22 +70,12 @@ jobs:
 
           - arch: esp32s3
             board: t-energy-s3_e22
-            remove-debug-flags: >-
-              ./arch/esp32/esp32.ini
-              ./arch/esp32/esp32s2.ini
-              ./arch/esp32/esp32s3.ini
-              ./arch/esp32/esp32c3.ini
-            build-script-path: bin/build-esp32.sh
-            ota-firmware-source: firmware-s3.bin
-            ota-firmware-target: release/bleota-s3.bin
             artifact-paths: |
               release/*.bin
               release/*.elf
-            include-web-ui: true
 
           - arch: rp2040
             board: rp2040-lora-slowclock
-            build-script-path: bin/build-rpi2040.sh
             artifact-paths: |
               release/*.uf2
               release/*.elf
@@ -126,11 +106,6 @@ jobs:
           git-ref: ${{ env.meshtastic_firmware_ref }}
           arch: ${{ matrix.arch }}
           board: ${{ matrix.board }}
-          build-script-path: ${{ matrix.build-script-path }}
-          remove-debug-flags: ${{ matrix.remove-debug-flags }}
-          ota-firmware-source: ${{ matrix.ota-firmware-source }}
-          ota-firmware-target: ${{ matrix.ota-firmware-target }}
-          include-web-ui: ${{ matrix.include-web-ui }}
 
       - name: Store binaries as an artifact
         uses: actions/upload-artifact@v4
