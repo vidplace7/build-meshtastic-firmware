@@ -24,6 +24,11 @@ on:
         required: true
         type: string
         default: master
+      create_release:
+        description: Create Release
+        required: false
+        type: boolean
+        default: false
       # TODO: Add manual overrides for release (prerelease, name, body, etc)
 
   workflow_call:
@@ -33,6 +38,11 @@ on:
         required: true
         type: string
         default: master
+      create_release:
+        description: Create Release
+        required: false
+        type: boolean
+        default: false
 
 env:
   meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref || 'master' }}
@@ -117,7 +127,7 @@ jobs:
 
   release:
     name: Release
-    if: (inputs.meshtastic_firmware_ref || 'master') != 'master'
+    if: (inputs.create_release || false) == true
     runs-on: ubuntu-24.04
     needs: build
     permissions:

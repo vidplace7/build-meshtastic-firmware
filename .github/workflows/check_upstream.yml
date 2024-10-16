@@ -36,3 +36,4 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       meshtastic_firmware_ref: ${{ needs.check.outputs.meshtastic_ver }}
+      create_release: true
