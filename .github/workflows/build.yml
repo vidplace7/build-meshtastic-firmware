@@ -55,6 +55,48 @@ jobs:
       matrix:
         include:
           - arch: esp32s3
+            board: mesh-tab-3-2-TN-resistive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-3-2-IPS-resistive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-3-5-IPS-resistive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-3-5-TN-resistive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-3-2-IPS-capacitive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-3-5-IPS-capacitive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
+            board: mesh-tab-4-0-IPS-capacitive
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
             board: t-deck
             artifact-paths: |
               release/*.bin
