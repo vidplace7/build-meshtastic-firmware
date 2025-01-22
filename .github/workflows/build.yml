@@ -55,6 +55,12 @@ jobs:
       matrix:
         include:
           - arch: esp32s3
+            board: seeed-sensecap-indicator-tft
+            artifact-paths: |
+              release/*.bin
+              release/*.elf
+
+          - arch: esp32s3
             board: mesh-tab-3-2-TN-resistive
             artifact-paths: |
               release/*.bin
