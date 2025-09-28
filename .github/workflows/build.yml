@@ -141,7 +141,7 @@ jobs:
       version: ${{ steps.build.outputs.version }}
     steps:
       - id: checkout_custom
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         name: Checkout this repo (custom changes)
         with:
           path: .custom
