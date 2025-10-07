@@ -1,10 +1,12 @@
 name: Build Extra
 on:
   schedule:
-    - cron: '0 20 * * *'  # Nightly master build
+    # Nightly master build
+    - cron: 0 20 * * *
 
   workflow_dispatch:
     inputs:
+      # trunk-ignore(checkov/CKV_GHA_7)
       meshtastic_firmware_ref:
         description: Meshtastic firmware ref
         required: true
@@ -33,19 +35,6 @@ env:
 
 jobs:
   setup:
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - esp32
-          - esp32s2
-          - esp32s3
-          - esp32c3
-          - esp32c6
-          - nrf52840
-          - rp2040
-          - rp2350
-          - stm32
     runs-on: ubuntu-latest
     steps:
       - id: checkout_meshtastic
@@ -59,27 +48,15 @@ jobs:
           python-version: 3.x
           cache: pip
       - run: pip install -U platformio
-      - name: Uncomment build epoch
-        shell: bash
-        run: |
-          sed -i 's/#-DBUILD_EPOCH=$UNIX_TIME/-DBUILD_EPOCH=$UNIX_TIME/' platformio.ini
       - name: Generate matrix
         id: jsonStep
         run: |
-          EXTRA=$(./bin/generate_ci_matrix.py ${{matrix.arch}} extra)
-          MAIN=$(./bin/generate_ci_matrix.py ${{matrix.arch}})
-          TARGETS=$(jq -n --argjson main "$MAIN" --argjson extra "$EXTRA" '$extra - $main')
-          echo "${{matrix.arch}}=$(jq -cn --argjson environments "$TARGETS" '{board: $environments}')" >> $GITHUB_OUTPUT
+          EXTRA=$(./bin/generate_ci_matrix.py all --level extra)
+          MAIN=$(./bin/generate_ci_matrix.py all)
+          TARGETS=$(jq -n -c --argjson main "$MAIN" --argjson extra "$EXTRA" '$extra - $main')
+          echo "all=$TARGETS" >> $GITHUB_OUTPUT
     outputs:
-      esp32: ${{ steps.jsonStep.outputs.esp32 }}
-      esp32s2: ${{ steps.jsonStep.outputs.esp32s2 }}
-      esp32s3: ${{ steps.jsonStep.outputs.esp32s3 }}
-      esp32c3: ${{ steps.jsonStep.outputs.esp32c3 }}
-      esp32c6: ${{ steps.jsonStep.outputs.esp32c6 }}
-      nrf52840: ${{ steps.jsonStep.outputs.nrf52840 }}
-      rp2040: ${{ steps.jsonStep.outputs.rp2040 }}
-      rp2350: ${{ steps.jsonStep.outputs.rp2350 }}
-      stm32: ${{ steps.jsonStep.outputs.stm32 }}
+      all: ${{ steps.jsonStep.outputs.all }}
 
   version:
     runs-on: ubuntu-latest
@@ -97,113 +74,18 @@ jobs:
     outputs:
       long: ${{ steps.version.outputs.long }}
 
-  build-esp32:
+  build:
     needs: [setup, version]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.esp32) }}
+      matrix:
+        build: ${{ fromJson(needs.setup.outputs.all) }}
     uses: ./.github/workflows/build_firmware.yml
     with:
       meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
       version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: esp32
-
-  build-esp32s2:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.esp32s2) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: esp32s2
-
-  build-esp32s3:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.esp32s3) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: esp32s3
-
-  build-esp32c3:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.esp32c3) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: esp32c3
-
-  build-esp32c6:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.esp32c6) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: esp32c6
-
-  build-nrf52840:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.nrf52840) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: nrf52840
-
-  build-rp2040:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.rp2040) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: rp2040
-
-  build-rp2350:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.rp2350) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: rp2350
-
-  build-stm32:
-    needs: [setup, version]
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.stm32) }}
-    uses: ./.github/workflows/build_firmware.yml
-    with:
-      meshtastic_firmware_ref: ${{ inputs.meshtastic_firmware_ref }}
-      version: ${{ needs.version.outputs.long }}
-      pio_env: ${{ matrix.board }}
-      platform: stm32
+      pio_env: ${{ matrix.build.board }}
+      platform: ${{ matrix.build.platform }}
 
   gather-artifacts:
     permissions:
@@ -222,19 +104,7 @@ jobs:
           - rp2350
           - stm32
     runs-on: ubuntu-latest
-    needs:
-      [
-        version,
-        build-esp32,
-        build-esp32s2,
-        build-esp32s3,
-        build-esp32c3,
-        build-esp32c6,
-        build-nrf52840,
-        build-rp2040,
-        build-rp2350,
-        build-stm32,
-      ]
+    needs: [version, build]
     steps:
       - id: checkout_meshtastic
         uses: actions/checkout@v5
