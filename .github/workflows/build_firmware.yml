@@ -23,7 +23,7 @@ jobs:
     name: build-${{ inputs.platform }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         name: Checkout Meshtastic firmware
         with:
           submodules: recursive

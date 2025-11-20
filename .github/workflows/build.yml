@@ -141,14 +141,14 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - id: checkout_meshtastic
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         name: Checkout Meshtastic firmware
         with:
           repository: meshtastic/firmware
           ref: ${{ env.meshtastic_firmware_ref }}
 
       - id: checkout_custom
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         name: Checkout this repo (custom changes)
         with:
           path: .custom

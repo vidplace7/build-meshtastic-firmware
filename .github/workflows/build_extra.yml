@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: checkout_meshtastic
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         name: Checkout Meshtastic firmware
         with:
           repository: meshtastic/firmware
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: checkout_meshtastic
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         name: Checkout Meshtastic firmware
         with:
           repository: meshtastic/firmware
@@ -107,7 +107,7 @@ jobs:
     needs: [version, build]
     steps:
       - id: checkout_meshtastic
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         name: Checkout Meshtastic firmware
         with:
           repository: meshtastic/firmware
