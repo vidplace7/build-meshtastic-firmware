@@ -126,7 +126,7 @@ jobs:
         run: mv -b -t ./ ./bin/device-*.sh ./bin/device-*.bat
 
       - name: Repackage in single firmware zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: firmware-${{matrix.arch}}-${{ needs.version.outputs.long }}
           overwrite: true
