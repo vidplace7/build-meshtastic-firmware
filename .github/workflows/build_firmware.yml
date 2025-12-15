@@ -39,7 +39,7 @@ jobs:
           pio_target: build
 
       - name: Store binaries as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: firmware-${{ inputs.platform }}-${{ inputs.pio_env }}-${{ inputs.version }}.zip
           overwrite: true

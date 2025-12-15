@@ -166,7 +166,7 @@ jobs:
           pio_env: ${{ matrix.board }}
 
       - name: Store binaries as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: firmware-${{ matrix.arch }}-${{ matrix.board }}-${{ steps.build.outputs.version }}.zip
           overwrite: true
