@@ -113,7 +113,7 @@ jobs:
           repository: meshtastic/firmware
           ref: ${{ env.meshtastic_firmware_ref }}
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v7
         with:
           path: ./
           pattern: firmware-${{matrix.arch}}-*
