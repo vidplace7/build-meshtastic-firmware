@@ -195,7 +195,7 @@ jobs:
 
       - id: gather_artifacts
         name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           pattern: "firmware-*-${{ needs.build.outputs.version }}.zip"
           merge-multiple: true
